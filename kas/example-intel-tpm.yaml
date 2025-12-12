@@ -1,0 +1,106 @@
+header:
+  # 18 was selected as it is compatible with distro provided kas 4.7
+  version: 18
+env:
+  USER:
+  BASE_HOME_DIR: "/home/${USER}"
+  BUILD_STUFF_DIR: "${BASE_HOME_DIR}/pscg/customers/build-stuff"
+  DEV_RAUC_KEYS_PATH: "${BUILD_STUFF_DIR}/rauc/keys/"
+repos:
+  poky:
+    url: https://git.yoctoproject.org/git/poky
+    branch: scarthgap
+    path: layers/poky
+    layers:
+      meta:
+      meta-poky:
+      meta-yocto-bsp:
+
+  meta-openembedded:
+    url : git://git.openembedded.org/meta-openembedded
+    branch: scarthgap
+    path: layers/meta-openembedded
+    layers:
+      meta-oe:
+      meta-python:
+      meta-networking:
+      meta-filesystems:
+      meta-initramfs:
+      
+  meta-thepscg-uefi-grub-noshim:
+    url: https://github.com/ronpscg/meta-thepscg-uefi-grub-noshim.git
+    branch: master
+    path: more-layers/meta-thepscg-uefi-grub-noshim
+  meta-security:
+    url: git://git.yoctoproject.org/meta-security
+    branch: scarthgap
+    path: layers/meta-security
+    layers:
+      meta-tpm:
+
+  meta-intel:
+    url: "git://git.yoctoproject.org/meta-intel"
+    branch: scarthgap
+    path: layers/meta-intel
+  
+machine: intel-corei7-64  
+target:
+  - core-image-minimal
+  
+local_conf_header:
+  paths: |
+     # Paths MUST be under the paths statement - or they would become relative to build/... 
+     DL_DIR = "${BUILD_STUFF_DIR}/scarthgap-x86_64/downloads"
+     SSTATE_DIR = "${BUILD_STUFF_DIR}/scarthgap-x86_64/sstate-cache"
+     # If need be SSTATE_DIR and SSTATE_MIRRORS are defined in the respective kas files when you build kas with <config-file0>:<config-file1>:... right most config supersedes the rest, by section
+ 
+  misc-customizations: |
+    # We definitely don't need all of these, but it wouldn't hurt
+    HOSTTOOLS:append = " gpg openssl cert-to-efi-sig-list sign-efi-sig-list uuidgen sbsign "
+    HOSTTOOLS:append = " docker "
+
+  grub-customizations: |
+    GRUB_CONFIG="grub-config.cfg"
+    GRUB_PGP_PUBLIC_KEY ?= "grub-pubkey.gpg"
+    # TODO use environment variables from outside of kas file
+    # I think we only use grub-key.gpg there, the HOST_PROVIDED_KEYS are used in a recipe that helps to create keys from inside Yocto
+    HOST_PROVIDED_KEYS ?= "${BASE_HOME_DIR}/pscg/secureboot-qemu-x86_64-efi-grub/artifacts/"
+    GRUB_GPG_KEY_ID ?= "8A79B38F2589CE82C6BE80CB2C3D2B57F2161903"
+    GRUB_BUILD_STANDALONE_IMAGE ?= "false"
+    BB_ENV_PASSTHROUGH_ADDITIONS ?= "GRUB_CONFIG GRUB_GPG_KEY_ID GRUB_PGP_PUBLIC_KEY HOST_PROVIDED_KEYS"
+    
+    #GRUB_BUILDIN:pn-grub-efi:append = " serial linux normal fat search file linux ext2 part_gpt "
+    #" search linux normal efi_gop efi_uga all_video gfxmenu gfxterm serial part_gpt fat ext2 file"
+
+    # You can uncomment and modify those to represent upstream GRUB 2.12
+    #PREFERRED_VERSION_grub-efi = "2.14"
+    #PREFERRED_VERSION_grub2-native = "2.14"
+    #PREFERRED_VERSION_grub2-efi-native = "2.14"
+
+  initramfs-customizations: |
+    # do not install - may lead to annoying dnf failures
+    EXTRA_IMAGEDEPENDS += "initramfs-dracut-in-docker"
+    INITRAMFS_IMAGE_CUSTOM = "initrd.img"
+
+  more-packages-and-features: |
+    EFI_PROVIDER = "grub-efi"
+    # We do not need to create a wic image, we will do it in a postprocessing step for now
+    IMAGE_FSTYPES = "ext4"
+    IMAGE_FEATURES:append = " read-only-rootfs "
+
+    IMAGE_INSTALL:append = " cryptsetup"
+    IMAGE_INSTALL:append = " tpm2-tss tpm2-tools"
+    IMAGE_INSTALL:append = " systemd-initramfs"
+    IMAGE_INSTALL:append = " systemd-crypt"
+    
+    PACKAGECONFIG:append:pn-systemd = " cryptsetup  "
+    PACKAGECONFIG:append:pn-systemd = " tpm2  "
+
+    IMAGE_INSTALL:append = " tpm2-auto-enrollment "
+
+    DISTRO_FEATURES:append = " tpm tpm2"
+    MACHINE_FEATURES:append = " tpm2"
+    # Enable this if meta-security is to be enabled
+    DISTRO_FEATURES:append = " security"
+
+    DISTRO_FEATURES:append = " systemd usrmerge"

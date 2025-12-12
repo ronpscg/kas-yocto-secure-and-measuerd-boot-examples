@@ -1,0 +1,8 @@
+header:
+  version: 18
+
+local_conf_header:
+  paths: |
+     DL_DIR = "${BUILD_STUFF_DIR}/scarthgap-x86_64/downloads"
+     SSTATE_MIRRORS = "file://.* file://${BUILD_STUFF_DIR}/scarthgap-x86_64/sstate-cache/PATH"
+     SSTATE_DIR = "${BUILD_STUFF_DIR}/scarthgap-x86_64/sstate-cache-docker"
