@@ -1,6 +1,8 @@
 header:
   # 18 was selected as it is compatible with distro provided kas 4.7
   version: 18
+  includes: 
+    - kas/systemd.kasinc.yaml
 env:
   USER:
   BASE_HOME_DIR: "/home/${USER}"
@@ -104,3 +106,9 @@ local_conf_header:
     DISTRO_FEATURES:append = " security"
 
     DISTRO_FEATURES:append = " systemd usrmerge"
+
+  user-management: |
+    INHERIT += "extrausers"
+    # To generate a password (e.g for root, but it doesn't matter) copy paste the output of the following command between '' in the EXTRA_USERS_PARAMS line
+    # $ openssl passwd -6 root | sed 's/\$/\\$/g'
+    EXTRA_USERS_PARAMS = "usermod -p '\$6\$uEd9ObyTJtWZECaW\$zk39gSDbtQBt.gW8PXsbrzq6qthGJZbYuMME1/.WpaE.8pZl..SA.PpIm9E9HKg58dqWrsTX5ZJxPj3EgET2R0' root;"

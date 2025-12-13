@@ -1,0 +1,10 @@
+header:
+  # 18 was selected as it is compatible with distro provided kas 4.7
+  version: 18
+local_conf_header:
+  systemd-setup: |
+    DISTRO_FEATURES:append = " systemd"
+    DISTRO_FEATURES:remove = " sysvinit"
+    # Note: this also makes ROOT_HOME = "root", as opposed to the default "/home/root"
+    INIT_MANAGER = "systemd"
+    DISTRO_FEATURES_BACKFILL_CONSIDERED += "sysvinit"
