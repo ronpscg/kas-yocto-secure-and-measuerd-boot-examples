@@ -3,6 +3,7 @@ header:
   version: 18
   includes: 
     - kas/systemd.kasinc.yaml
+    - kas/serial-autologin-root.kasinc.yaml
 env:
   USER:
   BASE_HOME_DIR: "/home/${USER}"

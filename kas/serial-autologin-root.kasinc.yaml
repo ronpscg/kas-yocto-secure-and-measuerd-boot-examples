@@ -1,0 +1,11 @@
+header:
+  # 18 was selected as it is compatible with distro provided kas 4.7
+  version: 18
+
+local_conf_header:
+  # If we use user-management as is , and include this file - the contents from the INCLUDING file will dominate
+  # If we use this as an additional config file (a.yaml:b.yaml...) - the contents of the last file will dominate
+  # Therefore, we make a unique key, to control the order for both cases
+  user-management-autologin-serial: |
+    # Some for the root, some for ssh-ing (e.g. with dropbear). See poky/documentation/ref-manual/features.rst
+    EXTRA_IMAGE_FEATURES += "allow-empty-password allow-root-login empty-root-password serial-autologin-root"
